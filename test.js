@@ -417,7 +417,7 @@ describe('excluding certain routes from filtering',function(){
             connection: {
                 remoteAddress: ''
             },
-            url: '/foo?bar=123'
+            url: '/foo?bar=123',
         };
     });
 
@@ -439,6 +439,43 @@ describe('excluding certain routes from filtering',function(){
         };
 
         this.ipfilter( this.req, res, function(){});
+    });
+});
+
+describe('including only certain routes to process',function(){
+    beforeEach(function(){
+        this.ipfilter = ipfilter(['127.0.0.1'], { log: false, mode: 'deny', including: ['/foo.*'] });
+        this.req = {
+            session: {},
+            headers: [],
+            connection: {
+                remoteAddress: '',
+                debug: true
+            },
+            url: '/foo?bar=123',
+        };
+    });
+
+    it('should deny requests to included paths', function( done ){
+        this.req.connection.remoteAddress = '190.0.0.0';
+        var res = {
+            end: function(){
+                assert.equal( 401, res.statusCode );
+                done();
+            }
+        };
+
+        this.ipfilter( this.req, {}, function(){
+            done();
+        });
+    });
+
+    it('should allow requests to paths not included', function( done ){
+        this.req.connection.remoteAddress = '190.0.0.0';
+        this.req.url = '/bar';
+        this.ipfilter( this.req, {}, function(){
+            done();
+        });
     });
 });
 
