@@ -442,9 +442,9 @@ describe('excluding certain routes from filtering',function(){
     });
 });
 
-describe('including only certain routes to process',function(){
+describe('match only certain routes to process',function(){
     beforeEach(function(){
-        this.ipfilter = ipfilter(['127.0.0.1'], { log: false, mode: 'deny', including: ['/foo.*'] });
+        this.ipfilter = ipfilter(['127.0.0.1'], { log: false, mode: 'deny', match: ['/foo.*'], excluded: ['/foo/exclude'] });
         this.req = {
             session: {},
             headers: [],
@@ -456,7 +456,7 @@ describe('including only certain routes to process',function(){
         };
     });
 
-    it('should deny requests to included paths', function( done ){
+    it('should deny requests for paths that match', function( done ){
         this.req.connection.remoteAddress = '190.0.0.0';
         var res = {
             end: function(){
@@ -470,9 +470,17 @@ describe('including only certain routes to process',function(){
         });
     });
 
-    it('should allow requests to paths not included', function( done ){
+    it('should allow requests for paths that do not match', function( done ){
         this.req.connection.remoteAddress = '190.0.0.0';
         this.req.url = '/bar';
+        this.ipfilter( this.req, {}, function(){
+            done();
+        });
+    });
+
+    it('should allow requests for paths that are excluded', function( done ){
+        this.req.connection.remoteAddress = '190.0.0.0';
+        this.req.url = '/foo/excluded';
         this.ipfilter( this.req, {}, function(){
             done();
         });
